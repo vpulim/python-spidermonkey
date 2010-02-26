@@ -100,7 +100,7 @@ def platform_config():
     # If we're linking against a system library it should give
     # us all the information we need.
     if USE_SYSTEM_LIB:
-        return js_config()
+        return nspr_config(config=js_config())
     
     # Build our configuration
     config = {
