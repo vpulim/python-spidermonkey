@@ -52,7 +52,7 @@ def find_sources(extensions=(".c", ".cpp")):
         ]
 
 def pkg_config(pkg_name, config=None):
-    pipe = sp.Popen("pkg-config --cflags --libs %s" % pkg_name,
+    pipe = sp.Popen("%s-config --cflags --libs" % pkg_name,
                         shell=True, stdout=sp.PIPE, stderr=sp.PIPE)
     (stdout, stderr) = pipe.communicate()
     if pipe.wait() != 0:
@@ -87,7 +87,7 @@ def nspr_config(config=None):
     return pkg_config("nspr", config)
 
 def js_config(config=None):
-    config = pkg_config("mozilla-js", config)
+    config = pkg_config("js", config)
     if "-DJS_THREADSAFE" not in config["extra_compile_args"]:
         raise SystemError("Unable to link against a library that was "
             "compiled without -DJS_THREADSAFE");
