@@ -34,24 +34,15 @@ ez_setup.use_setuptools()
 from setuptools import setup, Extension
 
 DEBUG = "--debug" in sys.argv
-USE_SYSTEM_LIB = "--system-library" in sys.argv
 
 os.environ['CC'] = "g++"
 
 def find_sources(extensions=(".c", ".cpp")):
-    if USE_SYSTEM_LIB:
-        return [
-            fname
-            for ext in extensions
-            for fname in glob.glob("spidermonkey/*" + ext)
-        ]
-    else:
-        return [
-            os.path.join(dpath, fname)
-            for (dpath, dnames, fnames) in os.walk("./spidermonkey")
-            for fname in fnames
-            if fname.endswith(extensions)
-        ]
+    return [
+        fname
+        for ext in extensions
+        for fname in glob.glob("spidermonkey/*" + ext)
+    ]
 
 def pkg_config(pkg_name, config=None):
     pipe = sp.Popen("%s-config --cflags --libs" % pkg_name,
@@ -90,64 +81,16 @@ def nspr_config(config=None):
 
 def js_config(config=None):
     config = pkg_config("js", config)
-#    if "-DJS_THREADSAFE" not in config["extra_compile_args"]:
-#        raise SystemError("Unable to link against a library that was "
-#            "compiled without -DJS_THREADSAFE");
+    # NOTE: spidermonkey must be compiled with --enable-threadsafe
     return config
 
 def platform_config():
-    sysname = os.uname()[0]
-    machine = os.uname()[-1]
-
     # If we're linking against a system library it should give
     # us all the information we need.
-    if USE_SYSTEM_LIB:
-        return nspr_config(config=js_config())
-    
-    # Build our configuration
-    config = {
-        "extra_compile_args": [
-            "-DJS_THREADSAFE",
-            "-DPOSIX_SOURCE",
-            "-D_BSD_SOURCE",
-            "-Wno-strict-prototypes" # Disable copius JS warnings
-        ],
-        "include_dirs": [
-            "spidermonkey/libjs",
-            "spidermonkey/%s-%s" % (sysname, machine)
-        ],
-        "library_dirs": [],
-        "libraries": [],
-        "extra_link_args": []
-    }
-
-    # Debug builds are useful for finding errors in
-    # the request counting semantics for Spidermonkey
-    if DEBUG:
-        config["extra_compile_args"].extend([
-            "-UNDEBG",
-            "-DDEBUG",
-            "-DJS_PARANOID_REQUEST"
-        ])
-
-    if sysname in ["Linux", "FreeBSD"]:
-        config["extra_compile_args"].extend([
-            "-DHAVE_VA_COPY",
-            "-DVA_COPY=va_copy"
-        ])
-
-    # Currently no suppot for Win32, patches welcome.
-    if sysname in ["Darwin", "Linux", "FreeBSD"]:
-        config["extra_compile_args"].append("-DXP_UNIX")
-    else:
-        raise RuntimeError("Unknown system name: %s" % sysname)
-
-    return nspr_config(config=config)
+    return nspr_config(config=js_config())
 
 Distribution.global_options.append(("debug", None,
                     "Build a DEBUG version of spidermonkey."))
-Distribution.global_options.append(("system-library", None,
-                    "Link against an installed system library."))
 
 setup(
     name = "python-spidermonkey",
