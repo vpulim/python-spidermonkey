@@ -36,6 +36,8 @@ from setuptools import setup, Extension
 DEBUG = "--debug" in sys.argv
 USE_SYSTEM_LIB = "--system-library" in sys.argv
 
+os.environ['CC'] = "g++"
+
 def find_sources(extensions=(".c", ".cpp")):
     if USE_SYSTEM_LIB:
         return [
@@ -88,9 +90,9 @@ def nspr_config(config=None):
 
 def js_config(config=None):
     config = pkg_config("js", config)
-    if "-DJS_THREADSAFE" not in config["extra_compile_args"]:
-        raise SystemError("Unable to link against a library that was "
-            "compiled without -DJS_THREADSAFE");
+#    if "-DJS_THREADSAFE" not in config["extra_compile_args"]:
+#        raise SystemError("Unable to link against a library that was "
+#            "compiled without -DJS_THREADSAFE");
     return config
 
 def platform_config():
